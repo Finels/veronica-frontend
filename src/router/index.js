@@ -67,22 +67,8 @@ export const constantRoutes = [
       {
         path: 'list',
         name: '驾校信息管理',
-        component: () => import('@/views/collection-manager/list'),
+        component: () => import('@/views/org-manager/detail'),
         meta: { title: '驾校信息管理', icon: 'form' }
-      },
-      {
-        path: 'edit/:id',
-        component: () => import('@/views/collection-manager/edit'),
-        name: '编辑藏品',
-        meta: { title: '编辑藏品', noCache: true, activeMenu: '/collection/list' },
-        hidden: true
-      },
-      {
-        path: 'create',
-        component: () => import('@/views/collection-manager/create'),
-        name: '创建藏品',
-        meta: { title: '创建藏品', icon: 'edit' },
-        hidden: true
       }
     ]
   },
@@ -95,19 +81,19 @@ export const constantRoutes = [
       {
         path: 'list',
         name: '教练信息管理',
-        component: () => import('@/views/collection-manager/list'),
+        component: () => import('@/views/coach-manager/list'),
         meta: { title: '教练信息管理', icon: 'form' }
       },
       {
         path: 'edit/:id',
-        component: () => import('@/views/collection-manager/edit'),
+        component: () => import('@/views/coach-manager/edit'),
         name: '编辑教练信息',
         meta: { title: '编辑教练信息', noCache: true, activeMenu: '/collection/list' },
         hidden: true
       },
       {
         path: 'create',
-        component: () => import('@/views/collection-manager/create'),
+        component: () => import('@/views/coach-manager/create'),
         name: '添加教练信息',
         meta: { title: '添加教练信息', icon: 'edit' },
         hidden: true
@@ -115,19 +101,19 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/report',
+    path: '/shift',
     component: Layout,
-    redirect: '/report/record',
-    name: 'Report',
+    redirect: '/shift/list',
+    name: 'Shift',
     meta: {
       title: '服务管理',
       icon: 'edit'
     },
     children: [
       {
-        path: 'destroy',
+        path: 'shift/list',
         name: '课程班次管理',
-        component: () => import('@/views/destroy/list'),
+        component: () => import('@/views/shift/list'),
         meta: { title: '课程班次管理', icon: 'password' }
       }
     ]
