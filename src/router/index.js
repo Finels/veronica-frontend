@@ -62,16 +62,27 @@ export const constantRoutes = [
     path: '/org',
     component: Layout,
     redirect: '/org/list',
-    name: 'Org',
-    children: [
-      {
-        path: 'list',
-        name: '驾校信息管理',
-        component: () => import('@/views/org-manager/detail'),
-        meta: { title: '驾校信息管理', icon: 'form' }
-      }
-    ]
+    children: [{
+      path: 'list',
+      name: 'OrgDetail',
+      component: () => import('@/views/org-manager/edit'),
+      meta: { title: '驾校信息管理', icon: 'form' }
+    }]
   },
+  // {
+  //   path: '/org',
+  //   component: Layout,
+  //   redirect: '/org/list',
+  //   name: 'Org',
+  //   children: [
+  //     {
+  //       path: 'list',
+  //       name: '驾校信息管理',
+  //       component: () => import('@/views/org-manager/detail'),
+  //       meta: { title: '驾校信息管理', icon: 'form' }
+  //     }
+  //   ]
+  // },
   {
     path: '/coach',
     component: Layout,

@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: '藏品管理系统',
+  title: '后端管理系统',
 
   /**
    * @type {boolean} true | false

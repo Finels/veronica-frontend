@@ -1,16 +1,21 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.name" placeholder="输入藏品编号/名称来搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-select v-model="listQuery.type" class="filter-item" clearable filterable default-first-option placeholder="选择科目来搜索">
+        <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="listQuery.coachId" class="filter-item" :remote-method="getQueryRemoteCoachList" clearable filterable default-first-option remote placeholder="选择教练来搜索">
+        <el-option v-for="(item,index) in targetCoachListOptions" :key="index" :label="item.name" :value="item.id" />
+      </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         查询
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-finished" @click="openInStoreWindow">
+      <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-finished" @click="openInShiftWindow">
         添加记录
       </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
+      <!-- <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
         导出
-      </el-button>
+      </el-button> -->
     </div>
 
     <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
@@ -19,44 +24,46 @@
           <span>{{ scope.$index+1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="藏品名称">
+      <el-table-column align="center" label="科目类别">
         <template slot-scope="scope">
           <span>{{ scope.row.cname }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="藏品编号">
+      <el-table-column align="center" label="教练名称">
         <template slot-scope="scope">
           <span>{{ scope.row.ccode }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="损坏地点">
+      <el-table-column align="center" label="开始时间">
         <template slot-scope="scope">
           <span>{{ scope.row.location }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="事故原因">
+      <el-table-column align="center" label="结束时间">
         <template slot-scope="scope">
           <span>{{ scope.row.reason }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="处理结果">
+      <el-table-column align="center" label="最大可预约数">
         <template slot-scope="scope">
           <span>{{ scope.row.result }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="责任人">
+      <el-table-column align="center" label="已预约人数">
         <template slot-scope="scope">
           <span>{{ scope.row.responsibility }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="事故时间">
+      <el-table-column align="center" label="操作" width="220">
         <template slot-scope="scope">
-          <span>{{ scope.row.happenTime }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="备注">
-        <template slot-scope="scope">
-          <span>{{ scope.row.backup }}</span>
+          <el-button slot="reference" type="danger" size="small" icon="el-icon-delete" @click="openInShiftWindow(scope.row.id)">
+            编辑
+          </el-button>
+          <el-popconfirm icon="el-icon-info" icon-color="red" title="确定删除吗，将删除其所有预约记录" @onConfirm="handleDel(scope.row.id)">
+            <el-button slot="reference" type="danger" size="small" icon="el-icon-delete">
+              删除
+            </el-button>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -64,29 +71,28 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
     <!--添加操作的窗口-->
-    <el-dialog title="添加事故记录" :visible.sync="inStoreFormVisible" lock-scroll :close-on-click-modal="false">
+    <el-dialog title="添加班次记录" :visible.sync="inShiftFormVisible" lock-scroll :close-on-click-modal="false">
       <el-form ref="inForm" :model="dataform" :rules="rules">
-        <el-form-item label="藏品编号/名称" :label-width="formLabelWidth" prop="cid">
-          <el-select v-model="dataform.cid" :remote-method="getRemoteCollectionList" filterable default-first-option remote placeholder="输入部分编号来搜索">
-            <el-option v-for="(item,index) in collectionListOptions" :key="index" :label="item.name" :value="item.id" />
+        <el-form-item label="选择科目" :label-width="formLabelWidth" prop="cid">
+          <el-select v-model="dataform.type" filterable default-first-option placeholder="输入部分编号来搜索">
+            <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="事故时间" :label-width="formLabelWidth" style="width:340px" prop="happenTime">
-          <el-date-picker v-model="dataform.happenTime" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
+        <el-form-item label="选择教练" :label-width="formLabelWidth" style="width:340px" prop="happenTime">
+          <el-select v-model="dataform.coachId" :remote-method="getRemoteCoachList" filterable default-first-option remote placeholder="输入教练名称来搜索">
+            <el-option v-for="(item,index) in coachListOptions" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="损坏地点" :label-width="formLabelWidth" style="width:400px" prop="location">
-          <el-input v-model="dataform.location" />
+        <el-form-item label="课程开始时间" :label-width="formLabelWidth" style="width:400px" prop="location">
+          <el-date-picker v-model="dataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
         </el-form-item>
-        <el-form-item label="事故原因" :label-width="formLabelWidth" style="width:400px" prop="reason">
-          <el-input v-model="dataform.reason" />
+        <el-form-item label="课程结束时间" :label-width="formLabelWidth" style="width:400px" prop="reason">
+          <el-date-picker v-model="dataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
         </el-form-item>
-        <el-form-item label="处理结果" :label-width="formLabelWidth" style="width:400px" prop="result">
-          <el-input v-model="dataform.result" />
+        <el-form-item label="最大可预约人数" :label-width="formLabelWidth" style="width:400px" prop="result">
+          <el-input v-model="dataform.total" />
         </el-form-item>
-        <el-form-item label="责任人" :label-width="formLabelWidth" style="width:400px" prop="responsibility">
-          <el-input v-model="dataform.responsibility" />
-        </el-form-item>
-        <el-form-item label="备注" :label-width="formLabelWidth" style="width:550px" prop="backup">
+        <el-form-item label="备注" :label-width="formLabelWidth" style="width:400px" prop="result">
           <el-input v-model="dataform.backup" />
         </el-form-item>
       </el-form>
@@ -99,8 +105,8 @@
 </template>
 
 <script>
-import * as accident from '@/api/accident'
-import * as collection from '@/api/collection'
+import * as shift from '@/api/shift'
+import * as coach from '@/api/coach'
 import Pagination from '@/components/Pagination'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
@@ -115,21 +121,24 @@ export default {
       downloadLoading: false,
       listLoading: false,
       listQuery: {
-        name: '',
+        type: '',
+        coachId: '',
         page: 1,
         limit: 20
       },
-      inStoreFormVisible: false, // 控制入库窗口的显示隐藏
-      collectionListOptions: [],
+      inShiftFormVisible: false, // 控制入库窗口的显示隐藏
+      typeListOptions: [{ id: 1, name: '科目二' }, { id: 2, name: '科目三' }],
+      coachListOptions: [],
+      targetCoachListOptions: [],
 
       // 添加的表单
       dataform: {
-        cid: undefined,
-        location: '',
-        reason: '',
-        result: '',
-        responsibility: '',
-        happenTime: '',
+        id: undefined,
+        type: '',
+        coachId: undefined,
+        shiftDateStart: '',
+        shiftDateEnd: '',
+        total: '',
         backup: ''
       },
       formLabelWidth: '120px',
@@ -149,43 +158,54 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      accident.fetchList(this.listQuery).then(response => {
+      shift.fetchList(this.listQuery.coachId, this.listQuery.page, this.listQuery.limit).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
       })
     },
-    getRemoteCollectionList(name) {
+    getQueryRemoteCoachList() {
       var vm = this
-      collection.fetchList({ name: name, page: 1, limit: 99 }).then(response => {
-        vm.collectionListOptions = response.data.lst
+      coach.fetchList(this.listQuery.type).then(response => {
+        vm.targetCoachListOptions = response.data
+      })
+    },
+    getRemoteCoachList() {
+      var vm = this
+      coach.fetchList(this.dataform.type).then(response => {
+        vm.coachListOptions = response.data
       })
     },
     // 打开入库窗口
-    openInStoreWindow() {
+    openInShiftWindow(id) {
       var vm = this
       this.resetDataForm()
-      this.inStoreFormVisible = true
+      this.inShiftFormVisible = true
       this.$nextTick(() => {
         this.$refs['inForm'].clearValidate()
         vm.restOptions()
       })
+      if (id) {
+        shift.fetchDetail(id).then(response => {
+          vm.dataform = response.data
+        })
+      }
     },
     // 关闭入库窗口
     inFormCancel() {
       this.resetDataForm()
       this.restOptions()
-      this.inStoreFormVisible = false
+      this.inShiftFormVisible = false
     },
     // 确定入库操作
     confirmIn() {
       var vm = this
       this.$refs['inForm'].validate((valid) => {
         if (valid) {
-          accident.persist(this.dataform).then(response => {
+          shift.upsertShift(this.dataform).then(response => {
             this.$notify({
               title: 'Success',
-              message: '添加事故记录成功',
+              message: '添加班次成功',
               type: 'success',
               duration: 2000
             })

@@ -16,7 +16,7 @@
           <el-col :span="24">
             <el-form-item style="margin-bottom: 40px;" prop="name">
               <MDinput v-model="postForm.name" :maxlength="100" required>
-              教练名称
+                教练名称
               </MDinput>
             </el-form-item>
             <div class="postInfo-container">
@@ -28,11 +28,11 @@
                   <div class="component-item">
                     <el-row>
                       <el-col :span="6">
-                        <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item" prop="code">
-                          <el-input v-model="postForm.code" placeholder="请输入联系方式" />
+                        <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item">
+                          <el-input v-model="postForm.tel" placeholder="请输入联系方式" />
                         </el-form-item>
                       </el-col>
-                    </el-row>      
+                    </el-row>
                   </div>
                 </el-card>
                 <!-- <el-col :span="10">
@@ -56,7 +56,7 @@
         <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <dropzone
             id="myVueDropzone"
-            url="http://116.63.132.6:8080/collection/upload"
+            url="http://localhost:8080/business/upload"
             accepted-files="image/*,application/pdf,.psd"
             :default-img="postForm.imgUrls"
             :show-remove-link="showRemoveLink"
@@ -74,15 +74,15 @@
 <script>
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
-import { fetchDetail, upsertCollection } from '@/api/collection'
-import { fetchList } from '@/api/businessStore'
+import { fetchDetail, upsertCoach } from '@/api/coach'
 import Dropzone from '@/components/Dropzone'
 import router from '../../../router'
 // import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
 
 const defaultForm = {
   id: undefined,
-  name: '', // 藏品名称
+  name: '', // 教练名称
+  tel: '',
   imgUrls: []
 }
 
@@ -114,9 +114,7 @@ export default {
       showRemoveLink: true,
       storeListOptions: [],
       rules: {
-        name: [{ required: true, message: '名称为必填项', trigger: 'change' }],
-        code: [{ required: true, message: '编号为必填项', trigger: 'change' }],
-        zcode: [{ required: true, message: '总登记号为必填项', trigger: 'change' }]
+        name: [{ required: true, message: '名称为必填项', trigger: 'change' }]
       },
       tempRoute: {},
       tempPicture: []
@@ -199,14 +197,6 @@ export default {
       }
       this.$refs.postForm.validate(valid => {
         if (valid) {
-          if (this.postForm.length <= 0 || this.postForm.width <= 0 || this.postForm.height <= 0 || this.postForm.mass <= 0) {
-            this.$message({
-              // message: rule.field + '为必传项',
-              message: '尺寸或质量数据必须大于0',
-              type: 'error'
-            })
-            return
-          }
           this.loading = true
           // if (this.postForm.imgUrls != null && this.postForm.imgUrls.length > 0 && this.postForm.imgUrls[0].url != null) {
           //   for (var i in this.postForm.imgUrls) {
@@ -214,10 +204,10 @@ export default {
           //   }
           // }
           console.log(this.postForm)
-          upsertCollection(this.postForm).then(response => {
+          upsertCoach(this.postForm).then(response => {
             this.$notify({
               title: '成功',
-              message: '成功保存藏品',
+              message: '保存成功',
               type: 'success',
               duration: 2000
             })
@@ -235,12 +225,6 @@ export default {
         return
       }
       router.back()
-    },
-    getRemoteStoreList() {
-      var vm = this
-      fetchList({ page: 1, limit: 99 }).then(response => {
-        vm.storeListOptions = response.data.lst
-      })
     }
     // getRemoteUserList(query) {
     //   searchUser(query).then(response => {

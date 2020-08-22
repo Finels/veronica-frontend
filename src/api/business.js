@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function fetchList(query) {
   return request({
-    url: 'http://116.63.132.6:8080/business/pagination',
+    url: 'http://localhost:8080/business/pagination',
     method: 'post',
     // headers: { 'Content-Type': 'application/json' },
     data: query
@@ -11,7 +11,7 @@ export function fetchList(query) {
 
 export function persist(data) {
   return request({
-    url: 'http://116.63.132.6:8080/business/store',
+    url: 'http://localhost:8080/business/store',
     method: 'post',
     data: data
   })
@@ -19,7 +19,7 @@ export function persist(data) {
 
 export function inStoreBusiness(data) {
   return request({
-    url: 'http://116.63.132.6:8080/business/in',
+    url: 'http://localhost:8080/business/in',
     method: 'post',
     data: data
   })
@@ -27,7 +27,7 @@ export function inStoreBusiness(data) {
 
 export function outStoreBusiness(data) {
   return request({
-    url: 'http://116.63.132.6:8080/business/out',
+    url: 'http://localhost:8080/business/out',
     method: 'post',
     data: data
   })
@@ -35,7 +35,7 @@ export function outStoreBusiness(data) {
 
 export function moveBusiness(data) {
   return request({
-    url: 'http://116.63.132.6:8080/business/move',
+    url: 'http://localhost:8080/business/move',
     method: 'post',
     data: data
   })
@@ -43,14 +43,14 @@ export function moveBusiness(data) {
 
 export function del(id) {
   return request({
-    url: 'http://116.63.132.6:8080/business/store',
+    url: 'http://localhost:8080/business/store',
     method: 'delete',
     params: { id: id }
   })
 }
 export function listExport(query) {
   return request({
-    url: 'http://116.63.132.6:8080/business/export',
+    url: 'http://localhost:8080/business/export',
     method: 'post',
     data: query
   })

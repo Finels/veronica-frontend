@@ -6,9 +6,6 @@
         <el-button v-loading="loading" style="margin-left: 15px;" type="success" @click="submitForm">
           保存
         </el-button>
-        <el-button v-loading="loading" type="warning" @click="cancelBtn">
-          取消
-        </el-button>
       </sticky>
 
       <div class="createPost-main-container">
@@ -29,12 +26,12 @@
                     <el-row>
                       <el-col :span="12">
                         <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item">
-                          <el-input v-model="postForm.zcode" type="number" placeholder="请输入联系方式" />
+                          <el-input v-model="postForm.tel" type="number" placeholder="请输入联系方式" />
                         </el-form-item>
                       </el-col>
                       <el-col :span="12">
                         <el-form-item label-width="90px" label="联系地址:" class="postInfo-container-item">
-                          <el-input v-model="postForm.wcode" placeholder="请输入联系地址" />
+                          <el-input v-model="postForm.location" placeholder="请输入联系地址" />
                         </el-form-item>
                       </el-col>
                     </el-row>
@@ -45,7 +42,7 @@
           </el-col>
         </el-row>
         <el-form-item style="margin-bottom: 40px;" label-width="80px" label="驾校简介:">
-          <el-input v-model="postForm.detail" :rows="1" type="textarea" class="article-textarea" autosize placeholder="请输入驾校简介" />
+          <el-input v-model="postForm.introduce" :rows="1" type="textarea" class="article-textarea" autosize placeholder="请输入驾校简介" />
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}words</span>
         </el-form-item>
 
@@ -56,7 +53,7 @@
         <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <dropzone
             id="myVueDropzone"
-            url="http://116.63.132.6:8080/collection/upload"
+            url="http://localhost:8080/business/upload"
             accepted-files="image/*,application/pdf,.psd"
             :default-img="postForm.imgUrls"
             :show-remove-link="showRemoveLink"
@@ -74,8 +71,7 @@
 <script>
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
-import { fetchDetail, upsertCollection } from '@/api/collection'
-import { fetchList } from '@/api/businessStore'
+import { fetchDetail, upsertOrg } from '@/api/org'
 import Dropzone from '@/components/Dropzone'
 import router from '../../../router'
 // import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
@@ -90,7 +86,7 @@ const defaultForm = {
 }
 
 export default {
-  name: 'Detail',
+  name: 'OrgDetail',
   components: { MDinput, Dropzone, Sticky },
   props: {
     isEdit: {
@@ -116,37 +112,32 @@ export default {
       loading: false,
       showRemoveLink: true,
       rules: {
-        name: [{ required: true, message: '名称为必填项', trigger: 'change' }],
-        code: [{ required: true, message: '编号为必填项', trigger: 'change' }],
-        zcode: [{ required: true, message: '总登记号为必填项', trigger: 'change' }]
+        name: [{ required: true, message: '名称为必填项', trigger: 'change' }]
       },
       tempPicture: []
     }
   },
   computed: {
     contentShortLength() {
-      return this.postForm.detail.length
+      return this.postForm.introduce.length
     }
   },
   created() {
-      const id = this.$route.params && this.$route.params.id
-      this.fetchData(id)
+    this.fetchData()
     // Why need to make a copy of this.$route here?
     // Because if you enter this page and quickly switch tag, may be in the execution of the setTagsViewTitle function, this.$route is no longer pointing to the current page
     // https://github.com/PanJiaChen/vue-element-admin/issues/1221
     this.tempRoute = Object.assign({}, this.$route)
   },
   methods: {
-    fetchData(id) {
-      if (id != null) {
-        fetchDetail(id).then(response => {
-          this.postForm = response.data
-          // this.postForm.imgArray = response.data.imgUrls
-          // this.postForm.imgUrls = null
-        }).catch(err => {
-          console.log(err)
-        })
-      }
+    fetchData() {
+      fetchDetail().then(response => {
+        this.postForm = response.data
+        // this.postForm.imgArray = response.data.imgUrls
+        // this.postForm.imgUrls = null
+      }).catch(err => {
+        console.log(err)
+      })
     },
     dropzoneBefore(file) {
       this.loading = true
@@ -185,14 +176,6 @@ export default {
       }
       this.$refs.postForm.validate(valid => {
         if (valid) {
-          if (this.postForm.length <= 0 || this.postForm.width <= 0 || this.postForm.height <= 0 || this.postForm.mass <= 0) {
-            this.$message({
-              // message: rule.field + '为必传项',
-              message: '尺寸或质量数据必须大于0',
-              type: 'error'
-            })
-            return
-          }
           this.loading = true
           // if (this.postForm.imgUrls != null && this.postForm.imgUrls.length > 0 && this.postForm.imgUrls[0].url != null) {
           //   for (var i in this.postForm.imgUrls) {
@@ -200,10 +183,10 @@ export default {
           //   }
           // }
           console.log(this.postForm)
-          upsertCollection(this.postForm).then(response => {
+          upsertOrg(this.postForm).then(response => {
             this.$notify({
               title: '成功',
-              message: '成功保存藏品',
+              message: '更新成功',
               type: 'success',
               duration: 2000
             })
@@ -214,18 +197,6 @@ export default {
           console.log('error submit!!')
           return false
         }
-      })
-    },
-    cancelBtn() {
-      if (this.loading) {
-        return
-      }
-      router.back()
-    },
-    getRemoteStoreList() {
-      var vm = this
-      fetchList({ page: 1, limit: 99 }).then(response => {
-        vm.storeListOptions = response.data.lst
       })
     }
     // getRemoteUserList(query) {
