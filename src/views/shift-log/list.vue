@@ -1,8 +1,11 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.name" placeholder="类型" clearable style="width: 130px" class="filter-item">
-        <el-option v-for="item in selectCategoryOptions" :key="item.id" :label="item.name" :value="item.id" />
+      <el-select v-model="listQuery.type" placeholder="选择科目" clearable style="width: 130px" class="filter-item">
+        <el-option v-for="item in typeListOptions" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="listQuery.coachId" class="filter-item" :remote-method="getQueryRemoteCoachList" clearable filterable default-first-option remote placeholder="选择教练来搜索">
+        <el-option v-for="(item,index) in targetCoachListOptions" :key="index" :label="item.name" :value="item.id" />
       </el-select>
       &nbsp;&nbsp;
       <el-date-picker v-model="listQuery.startTime" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" placeholder="选择开始时间段" />
@@ -12,9 +15,9 @@
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         查询
       </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
+      <!-- <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
         导出
-      </el-button>
+      </el-button> -->
     </div>
     <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
       <el-table-column align="center" label="序号" width="80">
@@ -22,49 +25,39 @@
           <span>{{ scope.$index+1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="操作类型">
+      <el-table-column width="160px" align="center" label="科目类别">
         <template slot-scope="scope">
-          <span>{{ scope.row.recordType | typeFilter }}</span>
+          <span>{{ scope.row.type | typeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="300px" align="center" label="藏品名称">
+      <el-table-column width="300px" align="center" label="教练名称">
         <template slot-scope="scope">
-          <span>{{ scope.row.collectionName }}</span>
+          <span>{{ scope.row.coachName }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="200px" align="center" label="仓库名">
+      <el-table-column width="300px" align="center" label="学员名称">
         <template slot-scope="scope">
-          <span>{{ scope.row.warehouse }}</span>
+          <span>{{ scope.row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="操作前库存数">
+      <el-table-column align="center" label="开始时间">
         <template slot-scope="scope">
-          <span>{{ scope.row.beforeCounter }}</span>
+          <span>{{ scope.row.shiftDateStart }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="操作数量">
+      <el-table-column align="center" label="结束时间">
         <template slot-scope="scope">
-          <span>{{ scope.row.counter }}</span>
+          <span>{{ scope.row.shiftDateEnd }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="操作后库存数">
+      <el-table-column width="120px" align="center" label="状态">
         <template slot-scope="scope">
-          <span>{{ scope.row.afterCounter }}</span>
+          <span>{{ scope.row.enable | statusFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="120px" align="center" label="操作人">
+      <el-table-column width="120px" align="center" label="使用情况">
         <template slot-scope="scope">
-          <span>{{ scope.row.optUser }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column width="200px" align="center" label="操作时间">
-        <template slot-scope="scope">
-          <span>{{ scope.row.optTime }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="备注">
-        <template slot-scope="scope">
-          <span>{{ scope.row.backup }}</span>
+          <span>{{ scope.row.used | usedFilter }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -73,7 +66,8 @@
   </div>
 </template>
 <script>
-import { fetchList } from '@/api/record'
+import { fetchList } from '@/api/shift-log'
+import * as coach from '@/api/coach'
 import Pagination from '@/components/Pagination'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
@@ -83,10 +77,24 @@ export default {
   directives: { waves },
   filters: {
     typeFilter(type) {
-      if (type == 0) {
-        return '入库'
+      if (type == 1) {
+        return '科目二'
+      } else if (type == 2) {
+        return '科目三'
+      }
+    },
+    statusFilter(status) {
+      if (status) {
+        return '正常'
       } else {
-        return '出库'
+        return '已取消'
+      }
+    },
+    usedFilter(used) {
+      if (used) {
+        return '已使用'
+      } else {
+        return '未使用'
       }
     }
   },
@@ -97,16 +105,16 @@ export default {
       downloadLoading: false,
       listLoading: false,
       listQuery: {
-        name: '',
+        type: '',
+        coachId: '',
         startTime: '',
         endTime: '',
         page: 1,
         limit: 20
       },
-      selectCategoryOptions: [
-        { id: 0, name: '入库' },
-        { id: 1, name: '出库' }
-      ]
+      typeListOptions: [{ id: 1, name: '科目二' }, { id: 2, name: '科目三' }],
+      targetCoachListOptions: []
+
     }
   },
   created() {
@@ -115,10 +123,16 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
+      fetchList(this.listQuery.coachId, this.listQuery.startTime, this.listQuery.endTime, this.listQuery.page, this.listQuery.limit).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
+      })
+    },
+    getQueryRemoteCoachList() {
+      var vm = this
+      coach.fetchList(this.listQuery.type).then(response => {
+        vm.targetCoachListOptions = response.data
       })
     },
     handleFilter() {
@@ -131,7 +145,7 @@ export default {
         const tHeader = ['操作类型', '藏品名称', '仓库名', '操作前库存数', '操作数', '操作后库存数', '操作人',
           '操作时间', '备注']
         for (var i in this.list) {
-          if (this.list[i].recordType == 0) {
+          if (this.list[i].recordType === 0) {
             this.list[i].recordTypeDsc = '入库'
           } else {
             this.list[i].recordTypeDsc = '出库'

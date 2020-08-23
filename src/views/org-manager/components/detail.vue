@@ -26,7 +26,7 @@
                     <el-row>
                       <el-col :span="12">
                         <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item">
-                          <el-input v-model="postForm.tel" type="number" placeholder="请输入联系方式" />
+                          <el-input v-model="postForm.tel" placeholder="请输入联系方式" />
                         </el-form-item>
                       </el-col>
                       <el-col :span="12">
@@ -52,10 +52,11 @@
 
         <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <dropzone
-            id="myVueDropzone"
+            id="orgDropzone"
             url="http://localhost:8080/business/upload"
-            accepted-files="image/*,application/pdf,.psd"
+            accepted-files="image/*"
             :default-img="postForm.imgUrls"
+            :max-files="4"
             :show-remove-link="showRemoveLink"
             @dropzone-removedFile="dropzoneR"
             @dropzone-success="dropzoneS"
@@ -73,7 +74,6 @@ import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
 import { fetchDetail, upsertOrg } from '@/api/org'
 import Dropzone from '@/components/Dropzone'
-import router from '../../../router'
 // import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
 
 const defaultForm = {
@@ -164,6 +164,9 @@ export default {
       console.log(file)
       this.loading = false
       if (response.code === 200) {
+        if (this.postForm.imgUrls == null) {
+          this.postForm.imgUrls = []
+        }
         this.postForm.imgUrls.push.apply(this.postForm.imgUrls, response.data)
       }
       // console.log(this.postForm.imgUrls)
@@ -190,7 +193,6 @@ export default {
               type: 'success',
               duration: 2000
             })
-            router.back()
           })
           this.loading = false
         } else {

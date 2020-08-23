@@ -22,4 +22,11 @@ export function upsertShift(data) {
     data: data
   })
 }
+export function delShift(id) {
+  return request({
+    url: 'http://localhost:8080/business/shift',
+    method: 'delete',
+    params: { shiftId: id }
+  })
+}
 

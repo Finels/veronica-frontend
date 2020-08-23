@@ -28,6 +28,20 @@
                   <div class="component-item">
                     <el-row>
                       <el-col :span="6">
+                        <el-form-item label-width="90px" label="资源类别:" class="postInfo-container-item">
+                          <el-select v-model="postForm.resourceId" placeholder="请选择资源类别" clearable class="filter-item">
+                            <el-option v-for="item in resourceOptionList" :key="item.id" :label="item.name" :value="item.id" />
+                          </el-select>
+                        </el-form-item>
+                      </el-col>
+                      <el-col :span="6">
+                        <el-form-item label-width="90px" label="科目类别:" class="postInfo-container-item">
+                          <el-select v-model="postForm.type" placeholder="请选择科目类别" clearable class="filter-item">
+                            <el-option v-for="item in typeListOptions" :key="item.id" :label="item.name" :value="item.id" />
+                          </el-select>
+                        </el-form-item>
+                      </el-col>
+                      <el-col :span="6">
                         <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item">
                           <el-input v-model="postForm.tel" placeholder="请输入联系方式" />
                         </el-form-item>
@@ -45,7 +59,7 @@
           </el-col>
         </el-row>
         <el-form-item style="margin-bottom: 40px;" label-width="80px" label="备注:">
-          <el-input v-model="postForm.detail" :rows="1" type="textarea" class="article-textarea" autosize placeholder="请输入备注" />
+          <el-input v-model="postForm.backup" :rows="1" type="textarea" class="article-textarea" autosize placeholder="请输入备注" />
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}words</span>
         </el-form-item>
 
@@ -59,6 +73,7 @@
             url="http://localhost:8080/business/upload"
             accepted-files="image/*,application/pdf,.psd"
             :default-img="postForm.imgUrls"
+            :max-files="1"
             :show-remove-link="showRemoveLink"
             @dropzone-removedFile="dropzoneR"
             @dropzone-success="dropzoneS"
@@ -74,7 +89,7 @@
 <script>
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
-import { fetchDetail, upsertCoach } from '@/api/coach'
+import { fetchDetail, upsertCoach, fetchResourceList } from '@/api/coach'
 import Dropzone from '@/components/Dropzone'
 import router from '../../../router'
 // import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
@@ -83,7 +98,8 @@ const defaultForm = {
   id: undefined,
   name: '', // 教练名称
   tel: '',
-  imgUrls: []
+  imgUrls: [],
+  backup: ''
 }
 
 export default {
@@ -116,13 +132,15 @@ export default {
       rules: {
         name: [{ required: true, message: '名称为必填项', trigger: 'change' }]
       },
+      typeListOptions: [{ id: '1', name: '科目二' }, { id: '2', name: '科目三' }],
+      resourceOptionList: [],
       tempRoute: {},
       tempPicture: []
     }
   },
   computed: {
     contentShortLength() {
-      return this.postForm.detail.length
+      return this.postForm.backup == null ? 0 : this.postForm.backup.length
     },
     displayTime: {
       // set and get is useful when the data
@@ -138,6 +156,7 @@ export default {
     }
   },
   created() {
+    this.getResourceOptionList()
     if (this.isEdit) {
       const id = this.$route.params && this.$route.params.id
       this.fetchData(id)
@@ -159,6 +178,11 @@ export default {
           console.log(err)
         })
       }
+    },
+    getResourceOptionList() {
+      fetchResourceList().then(response => {
+        this.resourceOptionList = response.data
+      })
     },
     dropzoneBefore(file) {
       this.loading = true
@@ -185,6 +209,9 @@ export default {
       console.log(file)
       this.loading = false
       if (response.code === 200) {
+        if (this.postForm.imgUrls == null) {
+          this.postForm.imgUrls = []
+        }
         this.postForm.imgUrls.push.apply(this.postForm.imgUrls, response.data)
       }
       // console.log(this.postForm.imgUrls)
@@ -198,6 +225,11 @@ export default {
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
+          if (this.postForm.imgUrls != null && this.postForm.imgUrls.length > 1) {
+            this.$message({ message: '教练图片只能上传一张,请删除后重试', type: 'error' })
+            this.loading = false
+            return
+          }
           // if (this.postForm.imgUrls != null && this.postForm.imgUrls.length > 0 && this.postForm.imgUrls[0].url != null) {
           //   for (var i in this.postForm.imgUrls) {
           //     this.postForm.imgUrls[i] = this.postForm.imgUrls[i].url

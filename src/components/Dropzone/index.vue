@@ -78,7 +78,7 @@ export default {
   },
   watch: {
     defaultImg(val) {
-      if (val.length === 0) {
+      if (val == null || val.length === 0) {
         this.initOnce = false
         return
       }

@@ -93,7 +93,7 @@ export const constantRoutes = [
         path: 'list',
         name: '教练信息管理',
         component: () => import('@/views/coach-manager/list'),
-        meta: { title: '教练信息管理', icon: 'form' }
+        meta: { title: '教练信息管理', icon: 'example' }
       },
       {
         path: 'edit/:id',
@@ -125,7 +125,37 @@ export const constantRoutes = [
         path: 'shift/list',
         name: '课程班次管理',
         component: () => import('@/views/shift/list'),
-        meta: { title: '课程班次管理', icon: 'password' }
+        meta: { title: '课程班次管理', icon: 'nested' }
+      },
+      {
+        path: 'shift/log/list',
+        name: '预约记录查询',
+        component: () => import('@/views/shift-log/list'),
+        meta: { title: '预约记录查询', icon: 'list' }
+      }
+    ]
+  },
+  {
+    path: '/appuser',
+    component: Layout,
+    redirect: '/appuser/list',
+    name: 'AppUser',
+    meta: {
+      title: '学员管理',
+      icon: 'table'
+    },
+    children: [
+      {
+        path: 'appuser/list',
+        name: '归档学员管理',
+        component: () => import('@/views/appuser/list'),
+        meta: { title: '归档学员管理', icon: 'size' }
+      },
+      {
+        path: 'appuser/un/list',
+        name: '未注册学员管理',
+        component: () => import('@/views/un-appuser/list'),
+        meta: { title: '未注册学员管理', icon: 'skill' }
       }
     ]
   },

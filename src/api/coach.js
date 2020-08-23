@@ -14,12 +14,26 @@ export function fetchList(type) {
     params: { type: type }
   })
 }
+export function fetchResourceList() {
+  return request({
+    url: 'http://localhost:8080/business/resource',
+    method: 'get'
+  })
+}
 
 export function upsertCoach(data) {
   return request({
     url: 'http://localhost:8080/business/coach',
     method: 'post',
     data: data
+  })
+}
+
+export function delCoach(id) {
+  return request({
+    url: 'http://localhost:8080/business/coach',
+    method: 'delete',
+    params: { coachId: id }
   })
 }
 
