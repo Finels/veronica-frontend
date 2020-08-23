@@ -77,10 +77,10 @@ export default {
   methods: {
     getNums() {
       dashboard.fetchNums().then(response => {
-        this.countNum1 = parseInt(response.data.countNum1)
-        this.countNum2 = parseInt(response.data.countNum2)
-        this.countNum3 = parseInt(response.data.countNum3)
-        this.countNum4 = parseInt(response.data.countNum4)
+        this.countNum1 = parseInt(response.data.num1)
+        this.countNum2 = parseInt(response.data.num2)
+        this.countNum3 = parseInt(response.data.num3)
+        this.countNum4 = parseInt(response.data.num4)
       })
     }
   }

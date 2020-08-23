@@ -2,25 +2,24 @@
   <div class="dashboard-editor-container">
     <panel-group />
 
-    <el-row :gutter="8">
+    <!-- <el-row :gutter="8">
       <el-col :xs="{span: 30}" :sm="{span: 30}" :md="{span: 30}" :lg="{span: 18}" :xl="{span: 18}" style="padding-right:8px;margin-bottom:30px;">
         <transaction-table />
       </el-col>
 
-    </el-row>
+    </el-row> -->
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import PanelGroup from './components/PanelGroup'
-import TransactionTable from './components/TransactionTable'
 
 export default {
   name: 'Dashboard',
   components: {
-    PanelGroup,
-    TransactionTable
+    PanelGroup
+
   },
   data() {
     return {

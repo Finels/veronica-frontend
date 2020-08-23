@@ -53,7 +53,7 @@
         <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <dropzone
             id="orgDropzone"
-            url="http://localhost:8080/business/upload"
+            url="http://39.106.220.164:8090/business/upload"
             accepted-files="image/*"
             :default-img="postForm.imgUrls"
             :max-files="4"
