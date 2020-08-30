@@ -89,16 +89,21 @@
           </el-select>
         </el-form-item>
         <el-form-item label="课程开始时间" :label-width="formLabelWidth" style="width:400px" prop="shiftDateStart">
-          <el-date-picker v-model="dataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
+          <!-- <el-date-picker v-model="dataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
+          <el-time-select v-model="dataform.shiftDateStart" placeholder="起始时间" :picker-options="{ start: '06:00', step: '00:15', end: '18:30' }" />
         </el-form-item>
         <el-form-item label="课程结束时间" :label-width="formLabelWidth" style="width:400px" prop="shiftDateEnd">
-          <el-date-picker v-model="dataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
+          <!-- <el-date-picker v-model="dataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
+          <el-time-select v-model="dataform.shiftDateEnd" placeholder="结束时间" :picker-options="{ start: '06:00', step: '00:15', end: '22:00', minTime: dataform.shiftDateStart }" />
         </el-form-item>
         <el-form-item label="最大可预约人数" :label-width="formLabelWidth" style="width:400px" prop="total">
           <el-input v-model="dataform.total" type="number" />
         </el-form-item>
         <el-form-item label="备注" :label-width="formLabelWidth" style="width:400px">
           <el-input v-model="dataform.backup" />
+        </el-form-item>
+        <el-form-item label="批量生成日期" :label-width="formLabelWidth" style="width:400px">
+          <el-date-picker v-model="dataform.daterange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -153,7 +158,10 @@ export default {
         shiftDateStart: '',
         shiftDateEnd: '',
         total: '',
-        backup: ''
+        backup: '',
+        daterange: '',
+        timeStart: '',
+        timeEnd: ''
       },
       formLabelWidth: '120px',
       rules: {

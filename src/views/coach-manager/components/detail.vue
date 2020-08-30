@@ -70,7 +70,7 @@
         <el-form-item prop="image_uri" style="margin-bottom: 30px;">
           <dropzone
             id="myVueDropzone"
-            url="http://39.106.220.164:8090/business/upload"
+            url="http://localhost:8090/business/upload"
             accepted-files="image/*,application/pdf,.psd"
             :default-img="postForm.imgUrls"
             :max-files="1"
