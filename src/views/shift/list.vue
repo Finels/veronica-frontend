@@ -13,6 +13,9 @@
       <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-finished" @click="openInShiftWindow()">
         添加记录
       </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="success" icon="el-icon-finished" @click="openBatchInShiftWindow()">
+        批量添加记录
+      </el-button>
       <!-- <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
         导出
       </el-button> -->
@@ -89,12 +92,12 @@
           </el-select>
         </el-form-item>
         <el-form-item label="课程开始时间" :label-width="formLabelWidth" style="width:400px" prop="shiftDateStart">
-          <!-- <el-date-picker v-model="dataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
-          <el-time-select v-model="dataform.shiftDateStart" placeholder="起始时间" :picker-options="{ start: '06:00', step: '00:15', end: '18:30' }" />
+          <el-date-picker v-model="dataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
+          <!-- <el-time-select v-model="dataform.shiftDateStart" placeholder="起始时间" :picker-options="{ start: '06:00', step: '00:15', end: '18:30' }" /> -->
         </el-form-item>
         <el-form-item label="课程结束时间" :label-width="formLabelWidth" style="width:400px" prop="shiftDateEnd">
-          <!-- <el-date-picker v-model="dataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
-          <el-time-select v-model="dataform.shiftDateEnd" placeholder="结束时间" :picker-options="{ start: '06:00', step: '00:15', end: '22:00', minTime: dataform.shiftDateStart }" />
+          <el-date-picker v-model="dataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" />
+          <!-- <el-time-select v-model="dataform.shiftDateEnd" placeholder="结束时间" :picker-options="{ start: '06:00', step: '00:15', end: '22:00', minTime: dataform.shiftDateStart }" /> -->
         </el-form-item>
         <el-form-item label="最大可预约人数" :label-width="formLabelWidth" style="width:400px" prop="total">
           <el-input v-model="dataform.total" type="number" />
@@ -102,13 +105,46 @@
         <el-form-item label="备注" :label-width="formLabelWidth" style="width:400px">
           <el-input v-model="dataform.backup" />
         </el-form-item>
-        <el-form-item label="批量生成日期" :label-width="formLabelWidth" style="width:400px">
-          <el-date-picker v-model="dataform.daterange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd" />
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="inFormCancel">取 消</el-button>
         <el-button type="primary" @click="confirmIn">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!--批量添加操作的窗口-->
+    <el-dialog title="批量添加班次记录" :visible.sync="batchInShiftFormVisible" lock-scroll :close-on-click-modal="false">
+      <el-form ref="batchInForm" :model="batchDataform" :rules="rules">
+        <el-form-item label="选择科目" :label-width="formLabelWidth" prop="type">
+          <el-select v-model="batchDataform.type" filterable default-first-option placeholder="请选择科目类别" @change="changeInputType">
+            <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="选择教练" :label-width="formLabelWidth" style="width:340px" prop="coachId">
+          <el-select v-model="batchDataform.coachId" filterable default-first-option placeholder="输入教练名称来搜索">
+            <el-option v-for="(item,index) in coachListOptions" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="课程开始时间" :label-width="formLabelWidth" style="width:400px" prop="timeStart">
+          <!-- <el-date-picker v-model="batchDataform.shiftDateStart" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
+          <el-time-select v-model="batchDataform.timeStart" placeholder="起始时间" :picker-options="{ start: '06:00', step: '00:15', end: '18:30' }" />
+        </el-form-item>
+        <el-form-item label="课程结束时间" :label-width="formLabelWidth" style="width:400px" prop="timeEnd">
+          <!-- <el-date-picker v-model="batchDataform.shiftDateEnd" class="filter-item" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" format="yyyy-MM-dd HH:mm:ss" /> -->
+          <el-time-select v-model="batchDataform.timeEnd" placeholder="结束时间" :picker-options="{ start: '06:00', step: '00:15', end: '22:00', minTime: dataform.shiftDateStart }" />
+        </el-form-item>
+        <el-form-item label="日期段" :label-width="formLabelWidth" style="width:400px" prop="dateRange">
+          <el-date-picker v-model="batchDataform.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" />
+        </el-form-item>
+        <el-form-item label="最大可预约人数" :label-width="formLabelWidth" style="width:400px" prop="total">
+          <el-input v-model="batchDataform.total" type="number" />
+        </el-form-item>
+        <el-form-item label="备注" :label-width="formLabelWidth" style="width:400px">
+          <el-input v-model="batchDataform.backup" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="inBatchFormCancel">取 消</el-button>
+        <el-button type="primary" @click="confirmBatchIn">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -146,6 +182,7 @@ export default {
         limit: 20
       },
       inShiftFormVisible: false, // 控制入库窗口的显示隐藏
+      batchInShiftFormVisible: false, // 控制批量入库窗口的显示隐藏
       typeListOptions: [{ id: '1', name: '科目二' }, { id: '2', name: '科目三' }],
       coachListOptions: [],
       targetCoachListOptions: [],
@@ -158,10 +195,17 @@ export default {
         shiftDateStart: '',
         shiftDateEnd: '',
         total: '',
-        backup: '',
-        daterange: '',
+        backup: ''
+      },
+      // 批量添加的表单
+      batchDataform: {
+        type: '1',
+        coachId: undefined,
         timeStart: '',
-        timeEnd: ''
+        timeEnd: '',
+        dateRange: undefined,
+        total: '',
+        backup: ''
       },
       formLabelWidth: '120px',
       rules: {
@@ -169,7 +213,10 @@ export default {
         coachId: [{ required: true, message: '请选择教练', trigger: 'blur' }],
         shiftDateStart: [{ required: true, message: '请选择开始时间', trigger: 'blur' }],
         shiftDateEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }],
-        total: [{ required: true, message: '请输入最大可预约人数', trigger: 'blur' }]
+        timeStart: [{ required: true, message: '请选择开始时间', trigger: 'blur' }],
+        timeEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }],
+        total: [{ required: true, message: '请输入最大可预约人数', trigger: 'blur' }],
+        dateRange: [{ required: true, message: '请选择日期段', trigger: 'blur' }]
       }
     }
   },
@@ -220,6 +267,23 @@ export default {
         })
       }
     },
+    // 打开批量入库窗口
+    openBatchInShiftWindow(id) {
+      var vm = this
+      this.resetDataForm()
+      this.batchInShiftFormVisible = true
+      this.$nextTick(() => {
+        this.$refs['batchInForm'].clearValidate()
+        vm.restOptions()
+        vm.changeInputType()
+      })
+    },
+    // 关闭批量入库窗口
+    inBatchFormCancel() {
+      this.resetDataForm()
+      this.restOptions()
+      this.batchInShiftFormVisible = false
+    },
     // 关闭入库窗口
     inFormCancel() {
       this.resetDataForm()
@@ -233,12 +297,30 @@ export default {
         if (valid) {
           shift.upsertShift(this.dataform).then(response => {
             this.$notify({
-              title: 'Success',
+              title: '成功',
               message: '添加班次成功',
               type: 'success',
               duration: 2000
             })
             vm.inFormCancel()
+            vm.getList()
+          })
+        }
+      })
+    },
+    // 确定批量入库操作
+    confirmBatchIn() {
+      var vm = this
+      this.$refs['batchInForm'].validate((valid) => {
+        if (valid) {
+          shift.batchUpsertShift(this.batchDataform).then(response => {
+            this.$notify({
+              title: '成功',
+              message: '批量添加成功',
+              type: 'success',
+              duration: 2000
+            })
+            vm.inBatchFormCancel()
             vm.getList()
           })
         }
@@ -264,6 +346,15 @@ export default {
         coachId: undefined,
         shiftDateStart: '',
         shiftDateEnd: '',
+        total: '',
+        backup: ''
+      }
+      this.batchDataform = {
+        type: '1',
+        coachId: undefined,
+        timeStart: '',
+        timeEnd: '',
+        dateRange: undefined,
         total: '',
         backup: ''
       }

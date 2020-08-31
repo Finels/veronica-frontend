@@ -15,9 +15,9 @@
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         查询
       </el-button>
-      <!-- <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
+      <el-button v-waves :loading="downloadLoading" class="filter-item" type="success" icon="el-icon-download" @click="handleDownload">
         导出
-      </el-button> -->
+      </el-button>
     </div>
     <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
       <el-table-column align="center" label="序号" width="80">
@@ -142,21 +142,32 @@ export default {
     handleDownload() {
       this.downloadLoading = true
       import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['操作类型', '藏品名称', '仓库名', '操作前库存数', '操作数', '操作后库存数', '操作人',
-          '操作时间', '备注']
+        const tHeader = ['科目类别', '教练名称', '学员名称', '开始时间', '结束时间', '状态', '使用情况']
         for (var i in this.list) {
-          if (this.list[i].recordType === 0) {
-            this.list[i].recordTypeDsc = '入库'
+          if (this.list[i].type === 1) {
+            this.list[i].typeDsc = '科目二'
+          } else if (this.list[i].type === 2) {
+            this.list[i].typeDsc = '科目三'
+          }
+
+          if (this.list[i].enable) {
+            this.list[i].enableDsc = '正常'
           } else {
-            this.list[i].recordTypeDsc = '出库'
+            this.list[i].enableDsc = '已取消'
+          }
+
+          if (this.list[i].used) {
+            this.list[i].usedDsc = '已完成'
+          } else {
+            this.list[i].usedDsc = '未完成'
           }
         }
-        const filterVal = ['recordTypeDsc', 'collectionName', 'warehouse', 'beforeCounter', 'counter', 'afterCounter', 'optUser', 'optTime', 'backup']
+        const filterVal = ['typeDsc', 'coachName', 'username', 'shiftDateStart', 'shiftDateEnd', 'enableDsc', 'usedDsc']
         const data = this.formatJson(filterVal, this.list)
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: '出入库记录导出' + parseTime(new Date())
+          filename: '预约记录导出' + parseTime(new Date())
         })
         this.downloadLoading = false
       })
