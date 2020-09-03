@@ -25,12 +25,12 @@
                   <div class="component-item">
                     <el-row>
                       <el-col :span="12">
-                        <el-form-item label-width="90px" label="联系方式:" class="postInfo-container-item">
+                        <el-form-item label-width="180px" label="联系方式:" class="postInfo-container-item">
                           <el-input v-model="postForm.tel" placeholder="请输入联系方式" />
                         </el-form-item>
                       </el-col>
                       <el-col :span="12">
-                        <el-form-item label-width="90px" label="联系地址:" class="postInfo-container-item">
+                        <el-form-item label-width="180px" label="联系地址:" class="postInfo-container-item">
                           <el-input v-model="postForm.location" placeholder="请输入联系地址" />
                         </el-form-item>
                       </el-col>
@@ -49,19 +49,20 @@
                         <el-form-item label-width="180px" label="启动页广告图片:" class="postInfo-container-item">
                           <el-upload
                             class="upload-demo"
-                            action="https://jsonplaceholder.typicode.com/posts/"
+                            action="http://localhost:8090/business/upload/withoutId"
                             accept=".jpg,.jpeg,.png"
                             :headers="tokenHeader"
+                            :on-preview="advHandlePreview"
                             :on-success="advHandleSuccess"
                             :on-remove="advHandleRemove"
                             :before-remove="advBeforeRemove"
                             multiple
                             :limit="1"
                             :on-exceed="advHandleExceed"
-                            :file-list="postForm.headImgUrls"
+                            :file-list="postForm.headImg"
                           >
                             <el-button size="small" type="primary">点击上传</el-button>
-                            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5MB</div>
                           </el-upload>
                         </el-form-item>
                       </el-col>
@@ -81,9 +82,8 @@
           <el-input v-model="postForm.introduce" :rows="1" type="textarea" class="article-textarea" autosize placeholder="请输入驾校简介" />
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}words</span>
         </el-form-item>
-        <el-form-item style="margin-bottom: 40px;" label-width="80px" label="广告链接串">
-          <el-input v-model="postForm.linkList" :rows="1" type="textarea" class="article-textarea" autosize placeholder="多个链接请使用‘|’来分割 链接顺序应与下面的广告图片顺序相匹配" />
-          <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}words</span>
+        <el-form-item style="margin-bottom: 40px;" label-width="80px" label="广告链接">
+          <el-input v-model="postForm.linkList" :rows="1" type="textarea" class="article-textarea1" placeholder="多个链接请使用‘|’来分割 链接顺序应与下面的广告图片顺序相匹配" />
         </el-form-item>
 
         <!-- <el-form-item prop="content" style="margin-bottom: 30px;">
@@ -123,8 +123,7 @@ const defaultForm = {
   introduce: '', // 驾校简介
   location: '', // 驾校地址
   tel: '', // 联系方式
-  headImg: null, // 对象，包含链接和其他id信息
-  headImgUrls: null, // 只有链接
+  headImg: [], // 对象，包含链接和其他id信息
   headLink: '',
   imgUrls: [],
   links: [],
@@ -182,19 +181,25 @@ export default {
     fetchData() {
       fetchDetail().then(response => {
         this.postForm = response.data
-        if (this.postForm.links != null && this.postForm.links.length > 0) {
-          for (var i in this.postForm.links) {
-            this.postForm.linkList += this.postForm.links[i]
-          }
-        }
+        // if (this.postForm.links != null && this.postForm.links.length > 0) {
+        //   for (var i in this.postForm.links) {
+        //     this.postForm.linkList += this.postForm.links[i] + '|'
+        //   }
+        //   // 去掉末尾的|号
+        //   this.postForm.linkList.splice(this.postForm.linkList.length - 1, 1)
+        // } else {
+        //   this.postForm.linkList = ''
+        // }
         // this.postForm.imgArray = response.data.imgUrls
         // this.postForm.imgUrls = null
       }).catch(err => {
         console.log(err)
       })
     },
+    advHandlePreview(file) {
+      window.open(file.url)
+    },
     advHandleRemove(file, fileList) {
-      this.postForm.headImgUrls = []
       this.postForm.headImg = []
       console.log(file, fileList)
     },
@@ -204,12 +209,8 @@ export default {
         if (this.postForm.headImg == null) {
           this.postForm.headImg = []
         }
-        if (this.postForm.headImgUrls == null) {
-          this.postForm.headImgUrls = []
-        }
-        this.postForm.headImg.push.apply(this.postForm.imgUrls, response.data)
         for (var i in response.data) {
-          this.postForm.headImgUrls.push(response.data[i].url)
+          this.postForm.headImg.push({ 'url': response.data[i].url })
         }
       }
       // console.log(this.postForm.imgUrls)
@@ -326,6 +327,15 @@ export default {
 }
 
 .article-textarea /deep/ {
+  textarea {
+    padding-right: 40px;
+    resize: none;
+    border: none;
+    border-radius: 0px;
+    border-bottom: 1px solid #bfcbd9;
+  }
+}
+.article-textarea1 /deep/ {
   textarea {
     padding-right: 40px;
     resize: none;
