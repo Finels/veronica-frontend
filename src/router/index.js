@@ -112,6 +112,17 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/learn',
+    component: Layout,
+    redirect: '/learn/list',
+    children: [{
+      path: 'list',
+      name: 'Learn',
+      component: () => import('@/views/learn/list'),
+      meta: { title: '教学视频管理', icon: 'table' }
+    }]
+  },
+  {
     path: '/shift',
     component: Layout,
     redirect: '/shift/list',
