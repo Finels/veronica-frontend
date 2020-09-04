@@ -1,12 +1,6 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.type" class="filter-item" clearable filterable default-first-option placeholder="选择科目来搜索">
-        <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
-      </el-select>
-      <el-select v-model="listQuery.coachId" class="filter-item" :remote-method="getQueryRemoteCoachList" clearable filterable default-first-option remote placeholder="选择教练来搜索">
-        <el-option v-for="(item,index) in targetCoachListOptions" :key="index" :label="item.name" :value="item.id" />
-      </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         查询
       </el-button>
@@ -76,14 +70,14 @@
     <el-dialog title="添加教学视频" :visible.sync="inShiftFormVisible" lock-scroll :close-on-click-modal="false">
       <el-form ref="inForm" :model="dataform" :rules="rules">
         <el-form-item label="视频标题" :label-width="formLabelWidth" prop="type">
-          <el-select v-model="dataform.type" filterable default-first-option placeholder="标题会显示在APP的视频记录顶部" @change="changeInputType">
+          <el-select v-model="dataform.title" filterable default-first-option placeholder="标题会显示在APP的视频记录顶部" @change="changeInputType">
             <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="封面图片" :label-width="formLabelWidth" style="width:340px" prop="coachId">
           <el-upload
             class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
+            action="http://39.106.220.164:8090/business/upload/withoutId"
             accept=".jpg,.jpeg,.png"
             :headers="tokenHeader"
             :on-success="titleImgHandleSuccess"
@@ -92,7 +86,7 @@
             multiple
             :limit="1"
             :on-exceed="titleImgHandleExceed"
-            :file-list="fileList"
+            :file-list="dataform.headUrlList"
           >
             <el-button size="small" type="primary">点击上传</el-button>
             <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
@@ -102,7 +96,7 @@
         <el-form-item label="上传视频" :label-width="formLabelWidth" style="width:340px" prop="coachId">
           <el-upload
             class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
+            action="http://39.106.220.164:8090/business/upload/withoutId"
             accept=".mpeg,.mp4,.avi"
             :headers="tokenHeader"
             :on-success="mp4HandleSuccess"
@@ -111,7 +105,7 @@
             multiple
             :limit="1"
             :on-exceed="mp4HandleExceed"
-            :file-list="fileList"
+            :file-list="dataform.videoUrlList"
           >
             <el-button size="small" type="primary">点击上传</el-button>
             <div slot="tip" class="el-upload__tip">只能上传MPEG/mp4/avi文件，且不超过200mb</div>
@@ -128,8 +122,7 @@
 </template>
 
 <script>
-import * as shift from '@/api/shift'
-import * as coach from '@/api/coach'
+import * as learnVideo from '@/api/learn-video'
 import Pagination from '@/components/Pagination'
 import waves from '@/directive/waves' // waves directive
 import { getToken } from '@/utils/auth'
@@ -141,40 +134,28 @@ export default {
     return {
       list: null,
       total: 0,
-      downloadLoading: false,
       listLoading: false,
       listQuery: {
-        type: '',
-        coachId: '',
         page: 1,
         limit: 20
       },
       tokenHeader: null,
       inShiftFormVisible: false, // 控制入库窗口的显示隐藏
-      typeListOptions: [{ id: '1', name: '科目二' }, { id: '2', name: '科目三' }],
-      coachListOptions: [],
-      targetCoachListOptions: [],
-
       // 添加的表单
       dataform: {
         id: undefined,
-        type: '1',
-        coachId: undefined,
-        shiftDateStart: '',
-        shiftDateEnd: '',
-        total: '',
-        backup: ''
+        title: '',
+        headUrl: '',
+        headUrlList: [],
+        videoUrl: '',
+        videoUrlList: []
       },
       formLabelWidth: '120px',
       rules: {
         type: [{ required: true, message: '请选择科目类别', trigger: 'blur' }],
         coachId: [{ required: true, message: '请选择教练', trigger: 'blur' }],
         shiftDateStart: [{ required: true, message: '请选择开始时间', trigger: 'blur' }],
-        shiftDateEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }],
-        timeStart: [{ required: true, message: '请选择开始时间', trigger: 'blur' }],
-        timeEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }],
-        total: [{ required: true, message: '请输入最大可预约人数', trigger: 'blur' }],
-        dateRange: [{ required: true, message: '请选择日期段', trigger: 'blur' }]
+        shiftDateEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }]
       }
     }
   },
@@ -184,47 +165,25 @@ export default {
     this.getList()
   },
   methods: {
-    changeInputType() {
-      this.coachListOptions = []
-      this.getRemoteCoachList()
-    },
     getList() {
       this.listLoading = true
-      shift.fetchList(this.listQuery.coachId, this.listQuery.page, this.listQuery.limit).then(response => {
+      learnVideo.fetchList(this.listQuery.coachId, this.listQuery.page, this.listQuery.limit).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
       })
     },
-    getRemoteCoachList() {
-      var vm = this
-      coach.fetchList(this.dataform.type).then(response => {
-        vm.coachListOptions = response.data
-      })
-    },
     // 打开入库窗口
     openInShiftWindow(id) {
-      var vm = this
       this.resetDataForm()
       this.inShiftFormVisible = true
       this.$nextTick(() => {
         this.$refs['inForm'].clearValidate()
-        vm.restOptions()
-        vm.changeInputType()
       })
-      if (id) {
-        shift.fetchDetail(id).then(response => {
-          vm.dataform = response.data
-          coach.fetchList(this.dataform.type).then(response => {
-            vm.coachListOptions = response.data
-          })
-        })
-      }
     },
     // 关闭入库窗口
     inFormCancel() {
       this.resetDataForm()
-      this.restOptions()
       this.inShiftFormVisible = false
     },
     // 确定入库操作
@@ -232,10 +191,10 @@ export default {
       var vm = this
       this.$refs['inForm'].validate((valid) => {
         if (valid) {
-          shift.upsertShift(this.dataform).then(response => {
+          learnVideo.upsertLearn(this.dataform).then(response => {
             this.$notify({
               title: '成功',
-              message: '添加班次成功',
+              message: '添加成功',
               type: 'success',
               duration: 2000
             })
@@ -247,7 +206,7 @@ export default {
     },
     handleDel(id) {
       var vm = this
-      shift.delShift(id).then(response => {
+      learnVideo.deleteVideo(id).then(response => {
         this.$notify({
           title: 'Success',
           message: '删除成功',
@@ -261,16 +220,12 @@ export default {
     resetDataForm() {
       this.dataform = {
         id: undefined,
-        type: '1',
-        coachId: undefined,
-        shiftDateStart: '',
-        shiftDateEnd: '',
-        total: '',
-        backup: ''
+        title: '',
+        headUrl: '',
+        headUrlList: [],
+        videoUrl: '',
+        videoUrlList: []
       }
-    },
-    restOptions() {
-      this.collectionListOptions = []
     },
     handleFilter() {
       this.listQuery.page = 1
@@ -280,7 +235,14 @@ export default {
       console.log(file, fileList)
     },
     titleImgHandleSuccess(response, file, fileList) {
-      console.log(file)
+      if (this.dataform.headUrlList == null) {
+        this.dataform.headUrlList = []
+      }
+      if (response.code === 200) {
+        this.dataform.headUrl = response.data[0].url
+        this.dataform.headUrlList.push(response.data[0].url)
+      }
+      this.$message({ message: '上传完成', type: 'success' })
     },
     titleImgHandleExceed(files, fileList) {
       this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
@@ -292,7 +254,14 @@ export default {
       console.log(file, fileList)
     },
     mp4HandleSuccess(response, file, fileList) {
-      console.log(file)
+      if (this.dataform.videoUrlList == null) {
+        this.dataform.videoUrlList = []
+      }
+      if (response.code === 200) {
+        this.dataform.videoUrl = response.data[0].url
+        this.dataform.videoUrlList.push(response.data[0].url)
+      }
+      this.$message({ message: '上传完成', type: 'success' })
     },
     mp4HandleExceed(files, fileList) {
       this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
