@@ -15,39 +15,19 @@
           <span>{{ scope.$index+1 }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="科目类别">
+      <el-table-column align="center" label="标题">
         <template slot-scope="scope">
-          <span>{{ scope.row.type | typeFilter }}</span>
+          <span>{{ scope.row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="教练名称">
+      <el-table-column align="center" label="封面图片">
         <template slot-scope="scope">
-          <span>{{ scope.row.coachName }}</span>
+          <el-avatar shape="square" :size="100" fit="contain" :src="scope.row.headUrl.length>0?scope.row.headUrl:'@/assets/404_images/404_cloud.png'" />
         </template>
       </el-table-column>
-      <el-table-column align="center" label="开始时间">
+      <el-table-column align="center" label="视频地址">
         <template slot-scope="scope">
-          <span>{{ scope.row.shiftDateStart }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="结束时间">
-        <template slot-scope="scope">
-          <span>{{ scope.row.shiftDateEnd }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="最大可预约数">
-        <template slot-scope="scope">
-          <span>{{ scope.row.total }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="已预约人数">
-        <template slot-scope="scope">
-          <span>{{ scope.row.left }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="备注">
-        <template slot-scope="scope">
-          <span>{{ scope.row.backup }}</span>
+          <span>{{ scope.row.videoUrl }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="操作" width="220">
@@ -55,7 +35,7 @@
           <el-button slot="reference" type="primary" size="small" icon="el-icon-edit" @click="openInShiftWindow(scope.row.id)">
             编辑
           </el-button>
-          <el-popconfirm icon="el-icon-info" icon-color="red" title="确定删除吗，将删除其所有预约记录" @onConfirm="handleDel(scope.row.id)">
+          <el-popconfirm icon="el-icon-info" icon-color="red" title="确定删除吗" @onConfirm="handleDel(scope.row.id)">
             <el-button slot="reference" type="danger" size="small" icon="el-icon-delete">
               删除
             </el-button>
@@ -69,12 +49,10 @@
     <!--添加操作的窗口-->
     <el-dialog title="添加教学视频" :visible.sync="inShiftFormVisible" lock-scroll :close-on-click-modal="false">
       <el-form ref="inForm" :model="dataform" :rules="rules">
-        <el-form-item label="视频标题" :label-width="formLabelWidth" prop="type">
-          <el-select v-model="dataform.title" filterable default-first-option placeholder="标题会显示在APP的视频记录顶部" @change="changeInputType">
-            <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
-          </el-select>
+        <el-form-item label="视频标题" :label-width="formLabelWidth" prop="title">
+          <el-input v-model="dataform.title" placeholder="标题会显示在APP的视频记录顶部" />
         </el-form-item>
-        <el-form-item label="封面图片" :label-width="formLabelWidth" style="width:340px" prop="coachId">
+        <el-form-item label="封面图片" :label-width="formLabelWidth" style="width:400px">
           <el-upload
             class="upload-demo"
             action="http://39.106.220.164:8090/business/upload/withoutId"
@@ -83,17 +61,18 @@
             :on-success="titleImgHandleSuccess"
             :on-remove="titleImgHandleRemove"
             :before-remove="titleImgBeforeRemove"
+            :before-upload="beforeTitleUpload"
             multiple
             :limit="1"
             :on-exceed="titleImgHandleExceed"
             :file-list="dataform.headUrlList"
           >
             <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5mb</div>
           </el-upload>
         </el-form-item>
 
-        <el-form-item label="上传视频" :label-width="formLabelWidth" style="width:340px" prop="coachId">
+        <el-form-item label="上传视频" :label-width="formLabelWidth" style="width:400px">
           <el-upload
             class="upload-demo"
             action="http://39.106.220.164:8090/business/upload/withoutId"
@@ -102,6 +81,7 @@
             :on-success="mp4HandleSuccess"
             :on-remove="mp4HandleRemove"
             :before-remove="mp4BeforeRemove"
+            :before-upload="beforeVideoUpload"
             multiple
             :limit="1"
             :on-exceed="mp4HandleExceed"
@@ -152,10 +132,7 @@ export default {
       },
       formLabelWidth: '120px',
       rules: {
-        type: [{ required: true, message: '请选择科目类别', trigger: 'blur' }],
-        coachId: [{ required: true, message: '请选择教练', trigger: 'blur' }],
-        shiftDateStart: [{ required: true, message: '请选择开始时间', trigger: 'blur' }],
-        shiftDateEnd: [{ required: true, message: '请选择结束时间', trigger: 'blur' }]
+        title: [{ required: true, message: '请填写标题', trigger: 'blur' }]
       }
     }
   },
@@ -167,7 +144,7 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      learnVideo.fetchList(this.listQuery.coachId, this.listQuery.page, this.listQuery.limit).then(response => {
+      learnVideo.fetchList(this.listQuery.page, this.listQuery.limit).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
@@ -175,11 +152,21 @@ export default {
     },
     // 打开入库窗口
     openInShiftWindow(id) {
+      var vm = this
       this.resetDataForm()
       this.inShiftFormVisible = true
       this.$nextTick(() => {
         this.$refs['inForm'].clearValidate()
       })
+      if (id) {
+        learnVideo.fetchDetail(id).then(response => {
+          vm.dataform = response.data
+          vm.dataform.headUrlList = []
+          vm.dataform.headUrlList.push(vm.dataform.headUrl)
+          vm.dataform.videoUrlList = []
+          vm.dataform.videoUrlList.push(vm.dataform.videoUrl)
+        })
+      }
     },
     // 关闭入库窗口
     inFormCancel() {
@@ -231,6 +218,14 @@ export default {
       this.listQuery.page = 1
       this.getList()
     },
+    beforeTitleUpload(file) {
+      const isLt5M = file.size / 1024 / 1024 < 5
+      if (!isLt5M) {
+        this.$message.error('上传封面图片大小不能超过 5MB!')
+        return false
+      }
+      return true
+    },
     titleImgHandleRemove(file, fileList) {
       console.log(file, fileList)
     },
@@ -249,6 +244,14 @@ export default {
     },
     titleImgBeforeRemove(file, fileList) {
       return this.$confirm(`确定移除 ${file.name}？`)
+    },
+    beforeVideoUpload(file) {
+      const isLt200M = file.size / 1024 / 1024 < 200
+      if (!isLt200M) {
+        this.$message.error('上传视频大小不能超过 5MB!')
+        return false
+      }
+      return true
     },
     mp4HandleRemove(file, fileList) {
       console.log(file, fileList)

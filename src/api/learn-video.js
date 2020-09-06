@@ -1,9 +1,18 @@
 import request from '@/utils/request'
 
-export function fetchDetail() {
+export function fetchList(page, limit) {
+  return request({
+    url: 'http://39.106.220.164:8090/business/learn/video/list',
+    method: 'get',
+    params: { page: page, limit: limit }
+  })
+}
+
+export function fetchDetail(id) {
   return request({
     url: 'http://39.106.220.164:8090/business/learn/video',
-    method: 'get'
+    method: 'get',
+    params: { id: id }
   })
 }
 
