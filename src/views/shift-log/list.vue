@@ -1,10 +1,13 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.type" placeholder="选择科目" clearable style="width: 130px" class="filter-item">
+      <el-select v-model="listQuery.resource" placeholder="请选择资源类别" clearable class="filter-item">
+        <el-option v-for="item in resourceOptionList" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="listQuery.type" placeholder="选择科目" clearable style="width: 130px" class="filter-item" @change="getQueryRemoteCoachList">
         <el-option v-for="item in typeListOptions" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
-      <el-select v-model="listQuery.coachId" class="filter-item" :remote-method="getQueryRemoteCoachList" clearable filterable default-first-option remote placeholder="选择教练来搜索">
+      <el-select v-model="listQuery.coachId" class="filter-item" clearable filterable placeholder="选择教练来搜索">
         <el-option v-for="(item,index) in targetCoachListOptions" :key="index" :label="item.name" :value="item.id" />
       </el-select>
       &nbsp;&nbsp;
@@ -30,14 +33,19 @@
           <span>{{ scope.row.type | typeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="300px" align="center" label="教练名称">
+      <el-table-column width="200px" align="center" label="教练名称">
         <template slot-scope="scope">
           <span>{{ scope.row.coachName }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="300px" align="center" label="学员名称">
+      <el-table-column width="200px" align="center" label="学员名称">
         <template slot-scope="scope">
           <span>{{ scope.row.username }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column width="200px" align="center" label="学员电话">
+        <template slot-scope="scope">
+          <span>{{ scope.row.tel }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="开始时间">
@@ -66,7 +74,7 @@
   </div>
 </template>
 <script>
-import { fetchList } from '@/api/shift-log'
+import { fetchList1 } from '@/api/shift-log'
 import * as coach from '@/api/coach'
 import Pagination from '@/components/Pagination'
 import waves from '@/directive/waves' // waves directive
@@ -110,20 +118,29 @@ export default {
         startTime: '',
         endTime: '',
         page: 1,
-        limit: 20
+        limit: 20,
+        resource: null
       },
+      resourceOptionList: [],
       typeListOptions: [{ id: 1, name: '科目二' }, { id: 2, name: '科目三' }],
       targetCoachListOptions: []
 
     }
   },
   created() {
-    this.getList()
+    this.getResourceOptionList()
   },
   methods: {
+    getResourceOptionList() {
+      coach.fetchResourceList().then(response => {
+        this.resourceOptionList = response.data
+        this.listQuery.resource = this.resourceOptionList[0].id
+        this.getList()
+      })
+    },
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery.coachId, this.listQuery.startTime, this.listQuery.endTime, this.listQuery.page, this.listQuery.limit).then(response => {
+      fetchList1(this.listQuery).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
@@ -131,7 +148,7 @@ export default {
     },
     getQueryRemoteCoachList() {
       var vm = this
-      coach.fetchList(this.listQuery.type).then(response => {
+      coach.fetchList1(this.listQuery).then(response => {
         vm.targetCoachListOptions = response.data
       })
     },
@@ -142,7 +159,7 @@ export default {
     handleDownload() {
       this.downloadLoading = true
       import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['科目类别', '教练名称', '学员名称', '开始时间', '结束时间', '状态', '使用情况']
+        const tHeader = ['科目类别', '教练名称', '学员名称', '学员电话', '开始时间', '结束时间', '状态', '使用情况']
         for (var i in this.list) {
           if (this.list[i].type === 1) {
             this.list[i].typeDsc = '科目二'
@@ -162,7 +179,7 @@ export default {
             this.list[i].usedDsc = '未完成'
           }
         }
-        const filterVal = ['typeDsc', 'coachName', 'username', 'shiftDateStart', 'shiftDateEnd', 'enableDsc', 'usedDsc']
+        const filterVal = ['typeDsc', 'coachName', 'username', 'tel', 'shiftDateStart', 'shiftDateEnd', 'enableDsc', 'usedDsc']
         const data = this.formatJson(filterVal, this.list)
         excel.export_json_to_excel({
           header: tHeader,

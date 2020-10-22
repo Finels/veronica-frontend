@@ -1,6 +1,9 @@
 <template>
   <div class="app-container" style="max-height: 600px;">
     <div class="filter-container">
+      <el-select v-model="listQuery.resource" placeholder="请选择资源类别" clearable class="filter-item">
+        <el-option v-for="item in resourceOptionList" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
       <el-select v-model="listQuery.type" class="filter-item" clearable filterable default-first-option placeholder="选择科目来搜索">
         <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
       </el-select>
@@ -15,7 +18,7 @@
       </el-button> -->
     </div>
 
-    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row max-height="600" style="width: 100%">
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row max-height="500" style="width: 100%">
       <el-table-column align="center" label="序号" width="80">
         <template slot-scope="scope">
           <span>{{ scope.$index+1 }}</span>
@@ -67,7 +70,7 @@
 </template>
 
 <script>
-import { fetchList, delCoach } from '@/api/coach'
+import { fetchList1, delCoach, fetchResourceList } from '@/api/coach'
 // import Pagination from '@/components/Pagination'
 import waves from '@/directive/waves' // waves directive
 import router from '@/router'
@@ -92,21 +95,30 @@ export default {
       listLoading: false,
       listQuery: {
         type: 1,
+        resource: null,
         page: 1,
         limit: 20
       },
+      resourceOptionList: [],
       typeListOptions: [{ id: 1, name: '科目二' }, { id: 2, name: '科目三' }]
     }
   },
   created() {
-    this.getList()
+    this.getResourceOptionList()
   },
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery.type).then(response => {
+      fetchList1(this.listQuery).then(response => {
         this.list = response.data
         this.listLoading = false
+      })
+    },
+    getResourceOptionList() {
+      fetchResourceList().then(response => {
+        this.resourceOptionList = response.data
+        this.listQuery.resource = this.resourceOptionList[0].id
+        this.getList()
       })
     },
     handleCreate() {

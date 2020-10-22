@@ -1,10 +1,13 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.type" class="filter-item" clearable filterable default-first-option placeholder="选择科目来搜索">
+      <el-select v-model="listQuery.resource" placeholder="请选择资源类别" clearable class="filter-item">
+        <el-option v-for="item in resourceOptionList" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="listQuery.type" class="filter-item" clearable placeholder="选择科目来搜索" @change="getQueryRemoteCoachList">
         <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
       </el-select>
-      <el-select v-model="listQuery.coachId" class="filter-item" :remote-method="getQueryRemoteCoachList" clearable filterable default-first-option remote placeholder="选择教练来搜索">
+      <el-select v-model="listQuery.coachId" class="filter-item" clearable placeholder="选择教练来搜索">
         <el-option v-for="(item,index) in targetCoachListOptions" :key="index" :label="item.name" :value="item.id" />
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
@@ -177,10 +180,12 @@ export default {
       listLoading: false,
       listQuery: {
         type: '',
+        resource: null,
         coachId: '',
         page: 1,
         limit: 20
       },
+      resourceOptionList: [],
       inShiftFormVisible: false, // 控制入库窗口的显示隐藏
       batchInShiftFormVisible: false, // 控制批量入库窗口的显示隐藏
       typeListOptions: [{ id: '1', name: '科目二' }, { id: '2', name: '科目三' }],
@@ -221,16 +226,23 @@ export default {
     }
   },
   created() {
-    this.getList()
+    this.getResourceOptionList()
   },
   methods: {
     changeInputType() {
       this.coachListOptions = []
       this.getRemoteCoachList()
     },
+    getResourceOptionList() {
+      coach.fetchResourceList().then(response => {
+        this.resourceOptionList = response.data
+        this.listQuery.resource = this.resourceOptionList[0].id
+        this.getList()
+      })
+    },
     getList() {
       this.listLoading = true
-      shift.fetchList(this.listQuery.coachId, this.listQuery.page, this.listQuery.limit).then(response => {
+      shift.fetchList1(this.listQuery).then(response => {
         this.list = response.data.lst
         this.total = response.data.total
         this.listLoading = false
@@ -238,7 +250,7 @@ export default {
     },
     getQueryRemoteCoachList() {
       var vm = this
-      coach.fetchList(this.listQuery.type).then(response => {
+      coach.fetchList1(this.listQuery).then(response => {
         vm.targetCoachListOptions = response.data
       })
     },

@@ -14,6 +14,13 @@ export function fetchList(type) {
     params: { type: type }
   })
 }
+export function fetchList1(param) {
+  return request({
+    url: 'http://39.106.220.164:8090/business/coach/type',
+    method: 'get',
+    params: param
+  })
+}
 export function fetchResourceList() {
   return request({
     url: 'http://39.106.220.164:8090/business/resource',
