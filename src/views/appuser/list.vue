@@ -54,11 +54,11 @@
           <el-button slot="reference" type="primary" size="small" icon="el-icon-edit" @click="openInShiftWindow(scope.row.id)">
             编辑
           </el-button>
-          <el-popconfirm icon="el-icon-info" icon-color="red" title="确定删除吗，将删除其所有预约记录" @onConfirm="handleDel(scope.row.id)">
+          <!-- <el-popconfirm icon="el-icon-info" icon-color="red" title="确定删除吗，将删除其所有预约记录" @onConfirm="handleDel(scope.row.id)">
             <el-button slot="reference" type="danger" size="small" icon="el-icon-delete">
               删除
             </el-button>
-          </el-popconfirm>
+          </el-popconfirm> -->
         </template>
       </el-table-column>
     </el-table>
@@ -161,8 +161,8 @@ export default {
         if (valid) {
           appuser.upsertAppUser(this.dataform).then(response => {
             this.$notify({
-              title: 'Success',
-              message: '添加学员成功',
+              title: '提示',
+              message: '操作成功',
               type: 'success',
               duration: 2000
             })

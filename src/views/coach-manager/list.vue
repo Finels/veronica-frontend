@@ -15,7 +15,7 @@
       </el-button> -->
     </div>
 
-    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row max-height="800" style="width: 100%">
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row max-height="600" style="width: 100%">
       <el-table-column align="center" label="序号" width="80">
         <template slot-scope="scope">
           <span>{{ scope.$index+1 }}</span>
