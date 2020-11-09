@@ -118,7 +118,7 @@
     <el-dialog title="批量添加班次记录" :visible.sync="batchInShiftFormVisible" lock-scroll :close-on-click-modal="false">
       <el-form ref="batchInForm" :model="batchDataform" :rules="rules">
         <el-form-item label="选择科目" :label-width="formLabelWidth" prop="type">
-          <el-select v-model="batchDataform.type" filterable default-first-option placeholder="请选择科目类别" @change="changeInputType">
+          <el-select v-model="batchDataform.type" filterable default-first-option placeholder="请选择科目类别" @change="changeBatchInputType">
             <el-option v-for="(item,index) in typeListOptions" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -229,9 +229,13 @@ export default {
     this.getResourceOptionList()
   },
   methods: {
+    changeBatchInputType() {
+      this.coachListOptions = []
+      this.getRemoteCoachList(this.batchDataform.type)
+    },
     changeInputType() {
       this.coachListOptions = []
-      this.getRemoteCoachList()
+      this.getRemoteCoachList(this.dataform.type)
     },
     getResourceOptionList() {
       coach.fetchResourceList().then(response => {
@@ -254,9 +258,9 @@ export default {
         vm.targetCoachListOptions = response.data
       })
     },
-    getRemoteCoachList() {
+    getRemoteCoachList(type) {
       var vm = this
-      coach.fetchList(this.dataform.type).then(response => {
+      coach.fetchList(type).then(response => {
         vm.coachListOptions = response.data
       })
     },
